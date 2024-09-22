@@ -1,30 +1,102 @@
 
 # Tutorial de varios temas de Zustand
 
-## 1. Uso de Persist
-Para mantener el estado de la tienda incluso después de recargar la página, puedes usar la funcionalidad de persistencia. Esto se hace usando el middleware persist.
-
-Uso:
+## 1. Uso de Persist (e Immer)
+Para mantener el estado de la tienda incluso después de recargar la página, puedes usar la funcionalidad de persistencia. Esto se hace usando el middleware `persist`.
 ~~~
 // store.js
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import create from 'zustand'
+import { persist } from 'zustand/middleware'
+import { immer } from 'zustand/middleware/immer'
 
-const useStore = create(
+const useUsersStore = create(
   persist(
-    (set) => ({
-      count: 0,
-      increment: () => set((state) => ({ count: state.count + 1 })),
-      decrement: () => set((state) => ({ count: state.count - 1 })),
-    }),
-        {
-      name: 'counter-storage', // name of the item in the storage (must be unique)
-      storage: createJSONStorage(() => sessionStorage), // (optional) by default, 'localStorage' is used
-    },
+    immer((set) => ({
+      usuarios: [],
+      agregarUsuario: (usuario) =>
+        set((state) => {
+          state.usuarios.push(usuario)
+        }),
+      eliminarUsuario: (id) =>
+        set((state) => {
+          const index = state.usuarios.findIndex((u) => u.id === id)
+          if (index !== -1) {
+            state.usuarios.splice(index, 1)
+          }
+        }),
+      actualizarUsuario: (id, datosActualizados) =>
+        set((state) => {
+          const usuario = state.usuarios.find((u) => u.id === id)
+          if (usuario) {
+            Object.assign(usuario, datosActualizados)
+          }
+        }),
+    })),
+    {
+      name: 'usuario-storage',
+      getStorage: () => localStorage,
+    }
   )
-);
+)
 
-export default useStore;
+export default useUsersStore
+~~~
+Ejemplo de Uso:
+~~~
+import React, { useState } from 'react'
+import useUsersStore from './useUsersStore'
+
+const UserManager = () => {
+  const { usuarios, agregarUsuario, eliminarUsuario, actualizarUsuario } = useUsersStore()
+  const [nuevoUsuario, setNuevoUsuario] = useState({ nombre: '', email: '' })
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+    setNuevoUsuario(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    agregarUsuario({ id: Date.now(), ...nuevoUsuario })
+    setNuevoUsuario({ nombre: '', email: '' })
+  }
+
+  return (
+    <div>
+      <h2>Gestión de Usuarios</h2>
+      
+      <form onSubmit={handleSubmit}>
+        <input
+          name="nombre"
+          value={nuevoUsuario.nombre}
+          onChange={handleInputChange}
+          placeholder="Nombre"
+        />
+        <input
+          name="email"
+          value={nuevoUsuario.email}
+          onChange={handleInputChange}
+          placeholder="Email"
+        />
+        <button type="submit">Agregar Usuario</button>
+      </form>
+
+      <ul>
+        {usuarios.map(usuario => (
+          <li key={usuario.id}>
+            {usuario.nombre} ({usuario.email})
+            <button onClick={() => eliminarUsuario(usuario.id)}>Eliminar</button>
+            <button onClick={() => actualizarUsuario(usuario.id, { nombre: usuario.nombre + ' (Actualizado)' })}>
+              Actualizar Nombre
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+export default UserManager
 ~~~
 
 ## 2. Selectores
