@@ -4,7 +4,7 @@
 ## 1. Uso de Persist (e Immer)
 Para mantener el estado de la tienda incluso después de recargar la página, puedes usar la funcionalidad de persistencia. Esto se hace usando el middleware `persist`.
 ~~~
-// store.js
+// useUsersStore.js
 import create from 'zustand'
 import { persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
