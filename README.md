@@ -6,7 +6,7 @@ Para mantener el estado de la tienda incluso después de recargar la página, pu
 ~~~
 // useUsersStore.js
 import create from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 
 const useUsersStore = create(
@@ -34,7 +34,7 @@ const useUsersStore = create(
     })),
     {
       name: 'usuario-storage',
-      getStorage: () => localStorage,
+      storage: createJSONStorage(() => sessionStorage), // (optional) by default, 'localStorage' is used
     }
   )
 )
